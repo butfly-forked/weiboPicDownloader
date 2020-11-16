@@ -43,7 +43,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-r', metavar = 'retry', dest = 'retry',
-    default = 5, type = int,
+    default = 10, type = int,
     help = 'set maximum number of retries'
 )
 parser.add_argument(
@@ -341,6 +341,7 @@ def download(url, path, overwrite):
 
 def main(*paras):
     if paras:
+        paras = list(map(str, paras))
         args = parser.parse_args(nargs_fit(parser, paras))
     else:
         args = parser.parse_args(nargs_fit(parser, sys.argv[1:]))
@@ -395,10 +396,13 @@ def main(*paras):
             nickname = user
             uid = nickname_to_uid(user, token)
 
-        if not nickname or not uid:
+        if not uid:
             print_fit('Invalid account {}'.format(user))
             print_fit('-' * 30)
             continue
+        
+        if not nickname:
+            nickname = f'({uid})'
 
         print_fit('{} {}'.format(nickname, uid))
 
