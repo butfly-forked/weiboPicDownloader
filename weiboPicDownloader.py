@@ -97,7 +97,7 @@ def nargs_fit(parser, args):
                 args[index] = ' ' + args[index]
     return args
 
-class printer():
+class Printer():
     def __init__(self):
         self.pinned = False
 
@@ -111,7 +111,7 @@ class printer():
             print(string)
             self.pinned = False
 
-print_fit = printer().print_fit
+print_fit = Printer().print_fit
 
 def merge(*dicts):
     result = {}
@@ -121,12 +121,6 @@ def merge(*dicts):
 def quit(string = ''):
     print_fit(string)
     exit()
-
-def make_dir(path):
-    try:
-        os.makedirs(path)
-    except Exception as e:
-        quit(str(e))
 
 def confirm(message):
     while True:
@@ -263,7 +257,7 @@ def get_resources(uid, video, interval, limit, token):
                             streams = [media_info[key] for key in ['mp4_720p_mp4', 'mp4_hd_url', 'mp4_sd_url', 'stream_url'] if key in media_info and media_info[key]]
                             if streams:
                                 resources.append(merge({'url': streams.pop(0), 'type': 'video'}, mark))
-            print_fit('{} {}(#{})'.format('Analysing weibos...' if empty < aware and not exceed else 'finish analysis', progress(amount, total), page), pin = True)
+            print_fit('{} {}(#{})'.format('Analysing weibos...' if empty < aware and not exceed else 'Finish analysis', progress(amount, total), page), pin = True)
             page += 1
         finally:
             time.sleep(interval)
@@ -322,6 +316,8 @@ def download(url, path, overwrite):
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
+        if response.url != url: # unfuck default_d_h_large.gif
+            raise Exception(f'{url} got redirected to {response.url}. Re-download...')
         size = path.stat().st_size
         if size != expected_size:
             raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')            
@@ -353,16 +349,16 @@ def main(*paras):
     users = [user.strip() for user in users]
 
     if args.directory:
-        base = args.directory
-        if os.path.exists(base):
-            if not os.path.isdir(base): quit('saving path is not a directory')
-        elif confirm('directory "{}" doesn\'t exist, help to create?'.format(base)):
-            make_dir(base)
+        base = Path(args.directory)
+        if base.exists():
+            if not base.is_dir(): quit('Saving path is not a directory')
+        elif confirm('Directory "{}" doesn\'t exist, help to create?'.format(base)):
+            base.mkdir()
         else:
-            quit('do it youself :)')
+            quit('Do it youself :)')
     else:
-        base = os.path.join(os.path.dirname(__file__), 'weiboPic')
-        if not os.path.exists(base): make_dir(base)
+        base = Path(__file__).parent / 'weiboPic'
+        base.mkdir(exist_ok=True)
 
     boundary = args.boundary.split(':')
     boundary = boundary * 2 if len(boundary) == 1 else boundary
@@ -416,8 +412,8 @@ def main(*paras):
                 quit()
 
         # quit()
-        album = os.path.join(base, nickname)
-        if resources and not os.path.exists(album): make_dir(album)
+        album = base / nickname
+        if resources and not album.exists(): album.mkdir()
         retry = 0
         while resources and retry <= args.retry:
             
@@ -430,7 +426,7 @@ def main(*paras):
             cancel = False
 
             for resource in resources:
-                path = os.path.join(album, format_name(resource, args.name))
+                path = album / format_name(resource, args.name)
                 tasks.append(pool.submit(download, resource['url'], path, args.overwrite))
 
             while done != total:
@@ -461,7 +457,7 @@ def main(*paras):
             resources = [resources[index] for index in failed]
             retry += 1
 
-        for resource in resources: print_fit('{} failed'.format(resource['url']))
+        for resource in resources: print_fit('{} {} failed'.format(resource['url'], format_name(resource, args.name)))
         print_fit('-' * 30)
     print_fit('Done!')
     return(nickname, uid, newest_bid)
