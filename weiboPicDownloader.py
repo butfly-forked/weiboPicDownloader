@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from functools import reduce
 import sys, platform
 import time, os, json, re, datetime, math, operator
@@ -242,7 +240,7 @@ def get_resources(uid, video, interval, limit, token):
                           
                             blog_url = card['scheme']
                             print_fit(f'Find more than 9 pictures for {blog_url}!')
-                            with requests.get(blog_url) as r:
+                            with request_fit('GET', blog_url, cookie=token) as r:
                                 a = re.search(r'var \$render_data = \[(.+)\]\[0\] \|\| {};', r.text, flags=re.DOTALL)[1]
                                 my_json = json.loads(a)
                                 pics = my_json['status']['pics']
