@@ -1,4 +1,6 @@
-# (免)登录下载微博图片 ![](https://img.shields.io/badge/python-2.7%7C3.4+-blue.svg)
+# Forked from https://github.com/nondanee/weiboPicDownloader 以下基本保留，未修改
+
+# (免)登录下载微博图片 ![](https://img.shields.io/badge/python-3.7+-blue.svg)
 
 批量下载微博用户图片 (CLI)
 
@@ -21,7 +23,6 @@
 ```
 $ pip install requests
 $ pip install colorama # 仅 Windows 10.0.14393 以下需要
-$ pip install futures # 仅 Python2 需要
 ```
 
 ## 使用

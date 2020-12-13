@@ -100,7 +100,7 @@ class Printer():
         self.pinned = False
 
     def print_fit(self, string, pin=False):
-        if pin == True:            
+        if pin == True:
             print(f'\r\033[K{string}', end='')
             self.pinned = True
         else:
@@ -232,20 +232,22 @@ def get_resources(uid, video, interval, limit, token):
                     mark = {'uid': uid, 'mid': mid, 'bid': mblog['bid'], 'date': date, 'text': mblog['raw_text']}
                     amount += 1
                     if not newest_bid: #Save newest bid
-                        newest_bid = mblog['bid']              
+                        newest_bid = mblog['bid']
                     if compare(limit[0], '>=', [mid, date]): exceed = True
                     if compare(limit[0], '>=', [mid, date]) or compare(limit[1], '<', [mid, date]): continue
                     if 'pics' in mblog:
                         if mblog['pic_num'] > 9:  # More than 9 images
-                          
                             blog_url = card['scheme']
                             print_fit(f'Find more than 9 pictures for {blog_url}!')
                             with request_fit('GET', blog_url, cookie=token) as r:
-                                a = re.search(r'var \$render_data = \[(.+)\]\[0\] \|\| {};', r.text, flags=re.DOTALL)[1]
-                                my_json = json.loads(a)
-                                pics = my_json['status']['pics']
+                                m = re.search(r'var \$render_data = \[(.+)\]\[0\] \|\| {};', r.text, flags=re.DOTALL)
+                                if not m:
+                                    print_fit('[E] Cannot parse post. Try to set cookie uisng `-c`.')
+                                else:
+                                    my_json = json.loads(m[1])
+                                    pics = my_json['status']['pics']
                         else:
-                            pics = mblog['pics']                        
+                            pics = mblog['pics']
                         for index, pic in enumerate(pics, 1):
                             if 'large' in pic:
                                 resources.append(merge({'url': pic['large']['url'], 'index': index, 'type': 'photo'}, mark))
@@ -301,7 +303,7 @@ def format_name(item, template):
             return value
         else:
             return str(item[key[0]])
-  
+
     return safeify(re.sub(r'{(.*?)}', substitute, template))
 
 def download(url, path, overwrite):
@@ -318,13 +320,14 @@ def download(url, path, overwrite):
             raise Exception(f'{url} got redirected to {response.url}. Re-download...')
         size = path.stat().st_size
         if size != expected_size:
-            raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')            
+            raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')
     except Exception as ex:
         print_fit(ex)
         if path.exists():
+            # Keep the borken files just in case.
             i = 1
             path_temp = path.with_name(f'[broken {i}]' + path.name)
-            while path_temp.exists(): 
+            while path_temp.exists():
                 i += 1
                 path_temp = path.with_name(f'[broken {i}]' + path.name)
             path.rename(path_temp)
@@ -380,9 +383,9 @@ def main(*paras):
 
     newest_bid = ''
     for number, user in enumerate(users, 1):
-        
+
         print_fit('{}/{} {}'.format(number, len(users), time.ctime()))
-        
+
         if re.search(r'^\d{10}$', user):
             nickname = uid_to_nickname(user, token)
             uid = user
@@ -394,7 +397,7 @@ def main(*paras):
             print_fit('Invalid account {}'.format(user))
             print_fit('-' * 30)
             continue
-        
+
         if not nickname:
             nickname = f'({uid})'
 
@@ -414,7 +417,7 @@ def main(*paras):
         if resources and not album.exists(): album.mkdir()
         retry = 0
         while resources and retry <= args.retry:
-            
+
             if retry > 0: print_fit('Automatic retry {}'.format(retry))
 
             total = len(resources)
@@ -447,7 +450,7 @@ def main(*paras):
                             progress(done, total, True)
                         ), pin = True)
                     else:
-                        print_fit('waiting for cancellation... ({})'.format(total - done), pin = True) 
+                        print_fit('waiting for cancellation... ({})'.format(total - done), pin = True)
 
             if cancel: quit()
             print_fit('Success {}, failure {}, total {}'.format(total - len(failed), len(failed), total))
