@@ -1,20 +1,14 @@
-# Forked from https://github.com/nondanee/weiboPicDownloader
-
 # weiboPicDownloader ![](https://img.shields.io/badge/python-3.7+-blue.svg)
 
-Forked from https://github.com/nondanee/weiboPicDownloader
-
 Weibo user album batch download tool (CLI)
-
-build user album by picking all photos from original weibos in user's post feed
 
 for more weibo free login APIs, turn to [wiki](https://github.com/nondanee/weiboPicDownloader/wiki)
 
 **[中文 README](README-CN.md)**
 
-
 ## References
 
+* [nondanee/weiboPicDownloader](https://github.com/nondanee/weiboPicDownloader) (original repo)
 * [yAnXImIN/weiboPicDownloader](https://github.com/yAnXImIN/weiboPicDownloader)  
 * [ningshu/weiboPicDownloader](https://github.com/ningshu/weiboPicDownloader) 
 
