@@ -5,6 +5,7 @@ import concurrent.futures
 import requests
 import argparse
 from pathlib import Path
+import dateutil.parser
 
 if platform.system() == 'Windows':
     if operator.ge(*map(lambda version: list(map(int, version.split('.'))), [platform.version(), '10.0.14393'])):
@@ -140,7 +141,7 @@ def request_fit(method, url, max_retry = 0, cookie = None, stream = False):
         'User-Agent': 'Mozilla/5.0 (Linux; Android 9; Pixel 3 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.80 Mobile Safari/537.36',
         'Cookie': cookie
     }
-    return requests.request(method, url, headers = headers, timeout = 5, stream = stream, verify = False)
+    return requests.request(method, url, headers = headers, stream = stream, verify = False)
 
 def read_from_file(path):
     try:
@@ -180,9 +181,14 @@ def parse_date(text):
             return (now - datetime.timedelta(hours = int(re.search(r'\d+', text).group()))).date()
         else:
             return now.date()
-    elif '昨天' in text:
+    if '昨天' in text:
         return now.date() - datetime.timedelta(days = 1)
-    elif re.search(r'^[\d|-]+$', text):
+    try:
+        my_time = dateutil.parser.parse(text)
+        return my_time.date()
+    except:
+        pass
+    if re.search(r'^[\d|-]+$', text):
         return datetime.datetime.strptime(((str(now.year) + '-') if not re.search(r'^\d{4}', text) else '') + text, '%Y-%m-%d').date()
 
 def compare(standard, operation, candidate):
@@ -229,7 +235,11 @@ def get_resources(uid, video, interval, limit, token):
                     if 'isTop' in mblog and mblog['isTop']: continue
                     mid = int(mblog['mid'])
                     date = parse_date(mblog['created_at'])
-                    mark = {'uid': uid, 'mid': mid, 'bid': mblog['bid'], 'date': date, 'text': mblog['raw_text']}
+                    if 'raw_text' in mblog:
+                        text = mblog['raw_text']
+                    else:
+                        text = mblog['text']
+                    mark = {'uid': uid, 'mid': mid, 'bid': mblog['bid'], 'date': date, 'text': text}
                     amount += 1
                     if not newest_bid: #Save newest bid
                         newest_bid = mblog['bid']
@@ -294,7 +304,7 @@ def format_name(item, template):
         elif key[0] == 'text':
             value = item[key[0]]
             value = value.replace('<br />', ' ') # Replace newline with space
-            # value = re.sub(r'<.*?>', '', value) # Remove other HTML tags.
+            value = re.sub(r'<(img|span).*?>', '', value) # Remove other HTML tags.
             value = value.replace('無断転載禁止', '')
             value = value.replace('\u200b', '')
             value = re.sub(r'#(.+?)(\[?超话\]?)?#', r' \1 ', value)
