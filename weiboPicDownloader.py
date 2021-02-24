@@ -307,6 +307,8 @@ def format_name(item, template):
             value = re.sub(r'<(img|span).*?>', '', value) # Remove other HTML tags.
             value = value.replace('無断転載禁止', '')
             value = value.replace('\u200b', '')
+            value = value.replace('&amp;', '&')
+            value = value.replace('&quot;', '＂')
             value = re.sub(r'#(.+?)(\[?超话\]?)?#', r' \1 ', value)
             value = re.sub(r'\s+', ' ', value)
             value = value.strip()[:100]
