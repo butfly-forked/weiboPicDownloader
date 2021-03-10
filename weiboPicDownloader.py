@@ -242,9 +242,9 @@ def get_resources(uid, video, interval, limit, token):
                     mark = {'uid': uid, 'mid': mid, 'bid': mblog['bid'], 'date': date, 'text': text}
                     amount += 1
                     # Try to get username again
-                    if not info.get('screen_name', None) and str(mblog['user']['id']) == uid:
+                    if 'screen_name' not in info and str(mblog['user']['id']) == uid:
                         info['screen_name'] = mblog['user']['screen_name']
-                    if info.get('newest_bid', None): #Save newest bid
+                    if 'newest_bid' not in info: #Save newest bid
                         info['newest_bid'] = mblog['bid']
 
                     if compare(limit[0], '>=', [mid, date]): exceed = True
