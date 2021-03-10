@@ -212,7 +212,7 @@ def get_resources(uid, video, interval, limit, token):
     exceed = False
     resources = []
 
-    newest_bid = ''
+    info = dict()
 
     while empty < aware and not exceed:
         try:
@@ -241,8 +241,12 @@ def get_resources(uid, video, interval, limit, token):
                         text = mblog['text']
                     mark = {'uid': uid, 'mid': mid, 'bid': mblog['bid'], 'date': date, 'text': text}
                     amount += 1
-                    if not newest_bid: #Save newest bid
-                        newest_bid = mblog['bid']
+                    # Try to get username again
+                    if not info.get('screen_name', None) and str(mblog['user']['id']) == uid:
+                        info['screen_name'] = mblog['user']['screen_name']
+                    if info.get('newest_bid', None): #Save newest bid
+                        info['newest_bid'] = mblog['bid']
+
                     if compare(limit[0], '>=', [mid, date]): exceed = True
                     if compare(limit[0], '>=', [mid, date]) or compare(limit[1], '<', [mid, date]): continue
                     if 'pics' in mblog:
@@ -275,7 +279,7 @@ def get_resources(uid, video, interval, limit, token):
     print_fit('Practically scanned {} weibos, get {} {}'.format(amount, len(resources), 'resources' if video else 'pictures'))
     # with open(f"json_backup/{uid}.json", "w", encoding='utf-8') as f1:
     #     json.dump(resources, f1, indent=2, default=json_serial)
-    return resources, newest_bid
+    return resources, info
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -304,7 +308,7 @@ def format_name(item, template):
         elif key[0] == 'text':
             value = item[key[0]]
             value = value.replace('<br />', ' ') # Replace newline with space
-            value = re.sub(r'<(img|span).*?>', '', value) # Remove other HTML tags.
+            value = re.sub(r'</*(img|span|a).*?>', '', value) # Remove other HTML tags.
             value = value.replace('無断転載禁止', '')
             value = value.replace('\u200b', '')
             value = value.replace('&amp;', '&')
@@ -420,9 +424,14 @@ def main(*paras):
                 resources = json.load(f)
         else:
             try:
-                resources, newest_bid = get_resources(uid, args.video, args.interval, boundary, token)
+                resources, info = get_resources(uid, args.video, args.interval, boundary, token)
             except KeyboardInterrupt:
                 quit()
+
+        if info.get('screen_name', None):
+            nickname = info['screen_name']
+        if info.get('newest_bid', None):
+            newest_bid = info['newest_bid']
 
         # quit()
         album = base / nickname
