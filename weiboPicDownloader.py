@@ -332,11 +332,12 @@ def download(url, path, overwrite):
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-        if response.url != url: # unfuck default_d_h_large.gif
-            raise Exception(f'{url} got redirected to {response.url}. Re-download...')
-        size = path.stat().st_size
-        if size != expected_size:
-            raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')
+        if not ('_large.gif' in response.url):
+            if response.url != url : # unfuck default_d_h_large.gif
+                raise Exception(f'{url} got redirected to {response.url}. Re-download...')
+            size = path.stat().st_size
+            if size != expected_size:
+                raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')
     except Exception as ex:
         print_fit(ex)
         if path.exists():
