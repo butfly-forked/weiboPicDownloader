@@ -7,6 +7,8 @@ import argparse
 from pathlib import Path
 import dateutil.parser
 
+proxy = None
+
 if platform.system() == 'Windows':
     if operator.ge(*map(lambda version: list(map(int, version.split('.'))), [platform.version(), '10.0.14393'])):
         os.system('')
@@ -75,6 +77,10 @@ parser.add_argument(
     '-o', dest = 'overwrite', action = 'store_true',
     help = 'overwrite existing files'
 )
+parser.add_argument(
+    '-p', metavar = 'proxy', dest = 'proxy',
+    help = 'specify proxy to be used on downloading, support (http|https|socks5)://[username:password@]host[:port]/'
+)
 
 def nargs_fit(parser, args):
     flags = parser._option_string_actions
@@ -141,7 +147,13 @@ def request_fit(method, url, max_retry = 0, cookie = None, stream = False):
         'User-Agent': 'Mozilla/5.0 (Linux; Android 9; Pixel 3 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.80 Mobile Safari/537.36',
         'Cookie': cookie
     }
-    return requests.request(method, url, headers = headers, stream = stream, verify = False)
+    if proxy == '':
+        session = requests.Session()
+        session.trust_env = False
+        return session.get(url, headers = headers, stream = True, verify = False)
+    else:
+        proxies = {"https": proxy, "http": proxy} if proxy else None
+        return requests.request(method, url, headers = headers, stream = stream, verify = False, proxies=proxies)
 
 def read_from_file(path):
     try:
@@ -358,13 +370,13 @@ def download(url, path, overwrite):
         return False
     else:
         end = datetime.datetime.now()
-        secs = round((end - start).total_seconds(), 3)
+        secs = round((end - start).total_seconds(), 1)
         ends = end.strftime('%H:%M:%S:%f')[:-3]
         kbytes = size/1000.0
-        kbps = kbytes/secs
+        kbps = round(kbytes/secs, 1)
         global totalmbytes
         totalmbytes += kbytes
-        print_fit('[{}] {} [{} KB] finished in {} seconds, {} K/s, total {} KB downloaded.'.format(ends, response.url, kbytes, secs, kbps, totalmbytes/1000.0))
+        print_fit('[{}] {} [{} KB] finished in {} seconds, {} K/s, total {} KB downloaded.'.format(ends, response.url, kbytes, secs, kbps, round(totalmbytes/1000.0, 1)))
         return True
 
 
