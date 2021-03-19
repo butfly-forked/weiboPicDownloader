@@ -322,9 +322,14 @@ def format_name(item, template):
 
     return safeify(re.sub(r'{(.*?)}', substitute, template))
 
+totalmbytes = 0
+
 def download(url, path, overwrite):
-    path = Path(path)
-    if path.exists() and not overwrite: return True
+    start = datetime.datetime.now()
+    # print_fit('[{}] {} starting into {}'.format(start.strftime('%H:%M:%S:%f')[:-3], url, path))
+    if path.exists() and not overwrite: 
+        # print_fit('[{}] {} ignore, {} existed'.format(start.strftime('%H:%M:%S:%f')[:-3], url, path))
+        return True
     try:
         with request_fit('GET', url, stream = True) as response:
             expected_size = int(response.headers['Content-length'])
@@ -338,6 +343,8 @@ def download(url, path, overwrite):
             size = path.stat().st_size
             if size != expected_size:
                 raise Exception(f'{path.name.split(" ")[-1]}: filesize doesn\'t match header ({expected_size} -> {size}). Re-download...')
+        else:
+            return False
     except Exception as ex:
         print_fit(ex)
         if path.exists():
@@ -350,6 +357,14 @@ def download(url, path, overwrite):
             path.rename(path_temp)
         return False
     else:
+        end = datetime.datetime.now()
+        secs = round((end - start).total_seconds(), 3)
+        ends = end.strftime('%H:%M:%S:%f')[:-3]
+        kbytes = size/1000.0
+        kbps = kbytes/secs
+        global totalmbytes
+        totalmbytes += kbytes
+        print_fit('[{}] {} [{} KB] finished in {} seconds, {} K/s, total {} KB downloaded.'.format(ends, response.url, kbytes, secs, kbps, totalmbytes/1000.0))
         return True
 
 
@@ -375,7 +390,7 @@ def main(*paras):
         else:
             quit('Do it youself :)')
     else:
-        base = Path(__file__).parent / 'weiboPic'
+        base = Path(os.getcwd()) / 'weiboPic' # Path(__file__).parent
         base.mkdir(exist_ok=True)
 
     boundary = args.boundary.split(':')
