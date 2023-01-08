@@ -62,6 +62,9 @@ Optional arguments
 - `-n name` naming template (identifier: `url`, `index`, `type`, `mid`, `bid`, `date`, `text`, `name`, like ["f-Strings"](https://www.python.org/dev/peps/pep-0498/#abstract) syntax)
 - `-v` download miaopai videos at the same time
 - `-o` overwrite existing files (skipping if exists for default)
+> add by butfly
+- `-p (http|https|socks5)://[username:password@]host[:port]` specify proxy to be used on downloading, support 
+
 
 ✳How to get the value of `SUB` from browser (Chrome for example)
 
